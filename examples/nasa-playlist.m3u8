@@ -1,0 +1,13 @@
+#EXTM3U
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=563000,RESOLUTION=1280x720,CODECS="avc1.77.30, mp4a.40.2"
+http://nasatv-lh.akamaihd.net/i/NASA_101@319270/index_400_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=432000,RESOLUTION=428x240,CODECS="avc1.640029, mp4a.40.2"
+http://nasatv-lh.akamaihd.net/i/NASA_101@319270/index_400_av-b.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=827000,RESOLUTION=1280x720,CODECS="avc1.77.30, mp4a.40.2"
+http://nasatv-lh.akamaihd.net/i/NASA_101@319270/index_700_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=732000,RESOLUTION=428x240,CODECS="avc1.640029, mp4a.40.2"
+http://nasatv-lh.akamaihd.net/i/NASA_101@319270/index_700_av-b.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=2128000,RESOLUTION=1280x720,CODECS="avc1.77.30, mp4a.40.2"
+http://nasatv-lh.akamaihd.net/i/NASA_101@319270/index_1000_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=2064000,RESOLUTION=1280x720,CODECS="avc1.640029, mp4a.40.2"
+http://nasatv-lh.akamaihd.net/i/NASA_101@319270/index_1000_av-b.m3u8?sd=10&rebase=on
