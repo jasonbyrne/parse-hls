@@ -1,6 +1,6 @@
 {
   "name": "parse-hls",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Parse HLS Manifests with zero dependencies",
   "files": [
     "dist/",

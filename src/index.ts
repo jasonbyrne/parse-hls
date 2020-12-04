@@ -452,7 +452,7 @@ export default class HLS {
         ),
       };
     } else {
-      out.media = this.segments.map((item) => item.serialize());
+      out.segments = this.segments.map((item) => item.serialize());
       out.totalDuration = this.totalDuration;
     }
     return {
