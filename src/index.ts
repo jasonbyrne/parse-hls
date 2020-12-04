@@ -139,7 +139,7 @@ const alternateRenditionsTags: string[] = [
   "imageStreamInf",
 ];
 
-class Item {
+export class Item {
   constructor(
     public readonly uri: string,
     public readonly properties: M3ULine[]
@@ -154,7 +154,7 @@ class Item {
   }
 }
 
-class M3ULine {
+export class M3ULine {
   public type: LineType;
   public tagName: string | null;
   public name: string | null;
@@ -299,6 +299,8 @@ const parseAttributePair = (str: string, tag: string): AttributePair => {
     value,
   };
 };
+
+export default HLS;
 
 export class HLS {
   public static parse(content: string): HLS {

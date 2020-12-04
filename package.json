@@ -1,11 +1,12 @@
 {
   "name": "parse-hls",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Parse HLS Manifests with zero dependencies",
+  "files": [
+    "dist/",
+    "README.md"
+  ],
   "main": "./dist/index.js",
-  "directories": {
-    "example": "examples"
-  },
   "scripts": {
     "build": "tsc",
     "test": "node dist/test"
