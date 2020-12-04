@@ -1,0 +1,29 @@
+{
+  "name": "parse-hls",
+  "version": "1.0.0",
+  "description": "Parse HLS Manifests with zero dependencies",
+  "main": "./dist/index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "build": "tsc",
+    "publish": "tsc && npm publish",
+    "test": "node dist/test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jasonbyrne/parse-hls.git"
+  },
+  "keywords": [
+    "hls",
+    "m3u8",
+    "m3u"
+  ],
+  "author": "Jason Byrne <jason.byrne@flosports.tv>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jasonbyrne/parse-hls/issues"
+  },
+  "homepage": "https://github.com/jasonbyrne/parse-hls#readme"
+}

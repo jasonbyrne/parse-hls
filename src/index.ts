@@ -1,4 +1,11 @@
-type AttributeValue = string | number | boolean | string[] | number[] | null;
+type AttributeValue =
+  | string
+  | number
+  | boolean
+  | string[]
+  | number[]
+  | Date
+  | null;
 type AttributePair = { key: string; value: AttributeValue };
 interface Attributes {
   [key: string]: AttributeValue;
@@ -9,25 +16,94 @@ type LineType = "TAG" | "URI" | "CUSTOM" | "COMMENT";
 const TAG_PATTERN = /#(?:-X-)?([^:]+):?(.*)$/;
 const TAG_PAIR_SPLITTER = /([^,="]+)((="[^"]+")|(=[^,]+))*/g;
 
-const manifestProperties: string[] = [
-  "m3u",
-  "version",
-  "playlistType",
-  "publishedTime",
-  "targetduration",
-  "mediaSequence",
-  "discontinuitySequence",
-  "imagesOnly",
-  "iFramesOnly",
-  "independentSegments",
-  "endlist",
-  "sessionKey",
-  "sessionData",
-  "start",
-  "allowCache",
-];
+type AttributeValueType =
+  | "string"
+  | "integer"
+  | "number"
+  | "stringArray"
+  | "boolean"
+  | "date";
 
-const mediaItemProperties: string[] = [
+const coerce: { [key: string]: (value: string) => AttributeValue } = {
+  number: (value) => {
+    return parseFloat(value);
+  },
+  integer: (value) => {
+    return parseInt(value);
+  },
+  date: (value) => {
+    return new Date(value);
+  },
+  string: (value) => {
+    return String(value).trim();
+  },
+  stringArray: (value) => {
+    return String(value).split(",");
+  },
+  boolean: (value) => {
+    return value.toUpperCase() !== "NO";
+  },
+};
+
+const knownKeys: { [key: string]: AttributeValueType } = {
+  bandwidth: "integer",
+  averageBandwidth: "integer",
+  frameRate: "number",
+  duration: "number",
+  targetduration: "number",
+  elapsedtime: "number",
+  timeOffset: "number",
+  codecs: "stringArray",
+  default: "boolean",
+  autoselect: "boolean",
+  forced: "boolean",
+  precise: "boolean",
+  programDateTime: "date",
+  publishedTime: "date",
+  startDate: "date",
+  endDate: "date",
+  version: "integer",
+  mediaSequence: "integer",
+  discontinuitySequence: "integer",
+  byterange: "string",
+  key: "string",
+  uri: "string",
+  scte35Out: "string",
+  id: "string",
+  xAdId: "string",
+  title: "string",
+  playlistType: "string",
+  method: "string",
+  iv: "string",
+  caid: "string",
+  cue: "string",
+  type: "string",
+  groupId: "string",
+  language: "string",
+  lang: "string",
+  closedCaptions: "string",
+  subtitles: "string",
+  audio: "string",
+  video: "string",
+  resolution: "string",
+  instreamId: "string",
+  name: "string",
+  layout: "string",
+  programId: "string",
+  allowCache: "boolean",
+  upid: "string",
+  cueIn: "boolean",
+  cueOut: "number",
+  cueOutCont: "string",
+  blackout: "boolean",
+  time: "number",
+  elapsed: "number",
+  oatclsScte35: "string",
+  scte35: "string",
+  plannedDuration: "number",
+};
+
+const segmentTags: string[] = [
   "inf",
   "programDateTime",
   "key",
@@ -42,6 +118,10 @@ const mediaItemProperties: string[] = [
   "discontinuity",
   "map",
   "beacon",
+  "gap",
+  "partInf",
+  "part",
+  "skip",
 ];
 
 const renditionProperties: string[] = ["streamInf"];
@@ -61,7 +141,7 @@ class Item {
   public serialize(): any {
     const out = { uri: this.uri };
     this.properties.forEach((prop) => {
-      prop.name && (out[prop.name] = prop);
+      prop.name && (out[prop.name] = prop.serialize());
     });
     return out;
   }
@@ -91,6 +171,16 @@ class M3ULine {
     }
   }
 
+  public serialize(): any {
+    const keys = Object.keys(this.attributes);
+
+    return keys.length === 0
+      ? true
+      : keys.length === 1 && keys[0] === "value"
+      ? this.attributes.value
+      : this.attributes;
+  }
+
   public getAttribute(key: string): AttributeValue {
     return this.attributes[key];
   }
@@ -101,7 +191,11 @@ class M3ULine {
   }
 
   public getUri(): string {
-    return this.name === "uri" ? String(this.getAttribute("value")) : "";
+    return this.name === "uri"
+      ? String(this.getAttribute("value"))
+      : this.getAttribute("uri")
+      ? String(this.getAttribute("uri"))
+      : "";
   }
 }
 
@@ -131,7 +225,7 @@ const toCamelCase = (str: string): string => {
 
 const parseLine = (line: string): M3ULine => new M3ULine(line);
 
-const parseAttributes = (str: string, tagName: string = ""): Attributes => {
+const parseAttributes = (str: string, tag: string = ""): Attributes => {
   // Split the attribute string
   const matched = str.match(TAG_PAIR_SPLITTER);
   if (matched === null) {
@@ -139,7 +233,7 @@ const parseAttributes = (str: string, tagName: string = ""): Attributes => {
   }
   // Parse attributes
   const list = (() => {
-    if (tagName === "inf") {
+    if (tag === "inf") {
       const duration = matched[0].split(" ");
       let additionalPairs: AttributePair[] = [];
       // Additional attributes stuffed into the duration
@@ -147,7 +241,7 @@ const parseAttributes = (str: string, tagName: string = ""): Attributes => {
         duration
           .splice(1)
           .forEach((pairStr) =>
-            additionalPairs.push(parseAttributePair(pairStr))
+            additionalPairs.push(parseAttributePair(pairStr, tag))
           );
       }
       // Compile into output
@@ -157,7 +251,7 @@ const parseAttributes = (str: string, tagName: string = ""): Attributes => {
         ...additionalPairs,
       ];
     }
-    return matched.map((pairStr) => parseAttributePair(pairStr));
+    return matched.map((pairStr) => parseAttributePair(pairStr, tag));
   })();
   // Insist on unique property names
   return list.reduce((all, current: AttributePair) => {
@@ -168,7 +262,7 @@ const parseAttributes = (str: string, tagName: string = ""): Attributes => {
   }, {} as Attributes);
 };
 
-const parseAttributePair = (str: string): AttributePair => {
+const parseAttributePair = (str: string, tag: string): AttributePair => {
   /**
    * 15.0
    * METHOD=AES-128
@@ -179,17 +273,29 @@ const parseAttributePair = (str: string): AttributePair => {
     .trim()
     .replace("=", "|")
     .split("|");
+  // Key-Value pair
   if (pairs.length == 2) {
     let key = toCamelCase(pairs[0]);
+    let value: AttributeValue = pairs[1].replace(/("|')/g, "");
+    if (knownKeys.hasOwnProperty(key)) {
+      value = coerce[knownKeys[key]](value);
+    }
     return {
       key: key,
-      value: pairs[1].replace(/("|')/g, ""),
+      value: value,
     };
   }
-  const v = parseFloat(pairs[0]);
+  // Standalone value
+  const value = (() => {
+    // If it's a known key then we know how to map it
+    if (knownKeys.hasOwnProperty(tag)) {
+      return coerce[knownKeys[tag]](pairs[0]);
+    }
+    return Number.isNaN(pairs[0]) ? pairs[0] : parseFloat(pairs[0]);
+  })();
   return {
     key: "value",
-    value: Number.isNaN(v) ? pairs[0] : v,
+    value,
   };
 };
 
@@ -199,21 +305,44 @@ export class HLS {
   }
 
   public readonly lines: M3ULine[] = [];
-  public readonly mediaItems: Item[] = [];
+  public readonly segments: Item[] = [];
   public readonly streamRenditions: Item[] = [];
   public readonly iFrameRenditions: Item[] = [];
   public readonly imageRenditions: Item[] = [];
   public readonly audioRenditions: Item[] = [];
   public readonly alternateVideoRenditions: Item[] = [];
   public readonly subtitlesRenditions: Item[] = [];
+  public readonly closedCaptionsRenditions: Item[] = [];
   public readonly isMaster: boolean;
   public readonly isVod: boolean;
   public readonly isLive: boolean;
   public readonly isIframes: boolean;
-  public readonly isIndependentSegments: boolean;
   public readonly isImageStream: boolean;
   public readonly version: number | undefined;
   public readonly totalDuration: number = 0;
+
+  public get type(): "master" | "live" | "vod" {
+    return this.isMaster ? "master" : this.isLive ? "live" : "vod";
+  }
+
+  public get manifestProperties(): M3ULine[] {
+    const props: any = {};
+    this.lines
+      .filter(
+        (line) =>
+          line.name &&
+          line.type !== "URI" &&
+          !segmentTags.includes(line.name) &&
+          !alternateRenditionsTags.includes(line.name) &&
+          !renditionProperties.includes(line.name)
+      )
+      .forEach((line) => {
+        if (line.name) {
+          props[line.name] = line.serialize();
+        }
+      });
+    return props;
+  }
 
   private constructor(content: string) {
     content = content.trim();
@@ -228,9 +357,6 @@ export class HLS {
     this.isVod = this.lines.some((line) => line.name === "endlist");
     this.isLive = !this.isVod;
     this.isIframes = this.lines.some((line) => line.name === "iFramesOnly");
-    this.isIndependentSegments = this.lines.some(
-      (line) => line.name === "independentSegments"
-    );
     this.isImageStream = this.lines.some((line) => line.name === "imagesOnly");
     this.version = (() => {
       const v = this.lines.find((line) => line.name == "version");
@@ -271,20 +397,26 @@ export class HLS {
           line.name == "media" &&
           String(line.getAttribute("type")).toLocaleLowerCase() == "subtitles"
       );
+      this.closedCaptionsRenditions = this.getStreamItems(
+        (line) =>
+          line.name == "media" &&
+          String(line.getAttribute("type")).toLocaleLowerCase() ==
+            "closed-captions"
+      );
     }
     // Chunklist
     else {
-      this.mediaItems = this.accumulateItems(
+      this.segments = this.accumulateItems(
         (line) => line.type == "URI",
         (line) => {
           return !!(
             line.type === "TAG" &&
             line.name &&
-            mediaItemProperties.includes(line.name)
+            segmentTags.includes(line.name)
           );
         }
       );
-      this.totalDuration = this.mediaItems.reduce((sum, current) => {
+      this.totalDuration = this.segments.reduce((sum, current) => {
         const duration = (() => {
           const val = Number(
             current.properties
@@ -318,25 +450,30 @@ export class HLS {
 
   public serialize(): any {
     const out: any = {
-      isMaster: this.isMaster,
+      type: this.type,
     };
     if (this.isMaster) {
-      out.renditions = {
-        streams: this.streamRenditions.map((item) => item.serialize()),
-        iframeOnly: this.iFrameRenditions.map((item) => item.serialize()),
-        imageOnly: this.imageRenditions.map((item) => item.serialize()),
+      out.variants = this.streamRenditions.map((item) => item.serialize());
+      out.trickplay = {
+        iframes: this.iFrameRenditions.map((item) => item.serialize()),
+        images: this.imageRenditions.map((item) => item.serialize()),
+      };
+      out.media = {
         audio: this.audioRenditions.map((item) => item.serialize()),
         video: this.alternateVideoRenditions.map((item) => item.serialize()),
         subtitles: this.subtitlesRenditions.map((item) => item.serialize()),
+        closedCaptions: this.closedCaptionsRenditions.map((item) =>
+          item.serialize()
+        ),
       };
     } else {
+      out.media = this.segments.map((item) => item.serialize());
       out.totalDuration = this.totalDuration;
-      out.targetDuration = this.find("targetDuration")?.getAttribute("value");
-      out.media = this.mediaItems.map((item) => item.serialize());
     }
-    out.version = this.version;
-    out.foo = "bar";
-    return out;
+    return {
+      ...out,
+      ...this.manifestProperties,
+    };
   }
 
   private getStreamItems(filter: (line: M3ULine) => boolean): Item[] {
