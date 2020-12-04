@@ -11,7 +11,7 @@ interface Attributes {
   [key: string]: AttributeValue;
 }
 
-type LineType = "TAG" | "URI" | "CUSTOM" | "COMMENT";
+type LineType = "TAG" | "URI";
 
 const TAG_PATTERN = /#(?:-X-)?([^:]+):?(.*)$/;
 const TAG_PAIR_SPLITTER = /([^,="]+)((="[^"]+")|(=[^,]+))*/g;
@@ -80,7 +80,6 @@ const knownKeys: { [key: string]: AttributeValueType } = {
   type: "string",
   groupId: "string",
   language: "string",
-  lang: "string",
   closedCaptions: "string",
   subtitles: "string",
   audio: "string",
@@ -89,7 +88,6 @@ const knownKeys: { [key: string]: AttributeValueType } = {
   instreamId: "string",
   name: "string",
   layout: "string",
-  programId: "string",
   allowCache: "boolean",
   upid: "string",
   cueIn: "boolean",
@@ -101,6 +99,15 @@ const knownKeys: { [key: string]: AttributeValueType } = {
   oatclsScte35: "string",
   scte35: "string",
   plannedDuration: "number",
+  programId: "number",
+  endOnNext: "boolean",
+  class: "string",
+  assocLanguage: "string",
+  characteristics: "string",
+  channels: "string",
+  hdcpLevel: "string",
+  dataId: "string",
+  value: "string",
 };
 
 const segmentTags: string[] = [
@@ -161,7 +168,7 @@ class M3ULine {
       this.name = toTagFriendlyName(matched[1]);
       this.content = line;
       this.attributes = parseAttributes(matched[2], this.name);
-      this.type = this.tagName.startsWith("EXT") ? "TAG" : "CUSTOM";
+      this.type = "TAG";
     } else {
       this.type = "URI";
       this.tagName = "URI";
@@ -263,12 +270,6 @@ const parseAttributes = (str: string, tag: string = ""): Attributes => {
 };
 
 const parseAttributePair = (str: string, tag: string): AttributePair => {
-  /**
-   * 15.0
-   * METHOD=AES-128
-   * URI="https://priv.example.com/key.php?r=52"
-   * URI="data:text/plain;base64,AAAASnBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAACoSEJ7zznHou8m2HbJCHvWfK10SEJ7zznHou8m2HbJCHvWfK11I88aJmwY="
-   */
   const pairs = str
     .trim()
     .replace("=", "|")
@@ -314,11 +315,7 @@ export class HLS {
   public readonly subtitlesRenditions: Item[] = [];
   public readonly closedCaptionsRenditions: Item[] = [];
   public readonly isMaster: boolean;
-  public readonly isVod: boolean;
   public readonly isLive: boolean;
-  public readonly isIframes: boolean;
-  public readonly isImageStream: boolean;
-  public readonly version: number | undefined;
   public readonly totalDuration: number = 0;
 
   public get type(): "master" | "live" | "vod" {
@@ -354,16 +351,7 @@ export class HLS {
       .filter((line) => line.trim().length > 0)
       .map((line) => parseLine(line));
     this.isMaster = this.lines.some((line) => line.name === "streamInf");
-    this.isVod = this.lines.some((line) => line.name === "endlist");
-    this.isLive = !this.isVod;
-    this.isIframes = this.lines.some((line) => line.name === "iFramesOnly");
-    this.isImageStream = this.lines.some((line) => line.name === "imagesOnly");
-    this.version = (() => {
-      const v = this.lines.find((line) => line.name == "version");
-      if (v) {
-        return Number(v.attributes.value);
-      }
-    })();
+    this.isLive = !this.lines.some((line) => line.name === "endlist");
     // Master Playlist
     if (this.isMaster) {
       this.streamRenditions = this.accumulateItems(
