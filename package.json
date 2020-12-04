@@ -1,6 +1,6 @@
 {
   "name": "parse-hls",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Parse HLS Manifests with zero dependencies",
   "main": "./dist/index.js",
   "directories": {
