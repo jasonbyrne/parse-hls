@@ -1,4 +1,4 @@
-import * as fs from "fs";
+import fs = require("fs");
 import HLS from ".";
 
 const manifest = HLS.parse(

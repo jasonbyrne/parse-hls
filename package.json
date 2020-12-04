@@ -1,6 +1,6 @@
 {
   "name": "parse-hls",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Parse HLS Manifests with zero dependencies",
   "files": [
     "dist/",
@@ -25,5 +25,8 @@
   "bugs": {
     "url": "https://github.com/jasonbyrne/parse-hls/issues"
   },
-  "homepage": "https://github.com/jasonbyrne/parse-hls#readme"
+  "homepage": "https://github.com/jasonbyrne/parse-hls#readme",
+  "devDependencies": {
+    "@types/node": "^14.14.10"
+  }
 }

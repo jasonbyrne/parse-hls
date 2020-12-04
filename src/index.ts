@@ -270,10 +270,7 @@ const parseAttributes = (str: string, tag: string = ""): Attributes => {
 };
 
 const parseAttributePair = (str: string, tag: string): AttributePair => {
-  const pairs = str
-    .trim()
-    .replace("=", "|")
-    .split("|");
+  const pairs = str.trim().replace("=", "|").split("|");
   // Key-Value pair
   if (pairs.length == 2) {
     let key = toCamelCase(pairs[0]);
@@ -300,9 +297,7 @@ const parseAttributePair = (str: string, tag: string): AttributePair => {
   };
 };
 
-export default HLS;
-
-export class HLS {
+export default class HLS {
   public static parse(content: string): HLS {
     return new HLS(content);
   }
