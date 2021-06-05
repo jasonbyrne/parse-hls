@@ -341,7 +341,7 @@ export default class HLS {
   private constructor(content: string) {
     content = content.trim();
     if (!content.startsWith("#EXTM3U")) {
-      throw new Error("Invalid M3U8 maifest");
+      throw new Error("Invalid M3U8 manifest");
     }
     this.lines = content
       .split(/\r?\n/)
