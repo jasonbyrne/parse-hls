@@ -319,7 +319,7 @@ export default class HLS {
     return this.isMaster ? "master" : this.isLive ? "live" : "vod";
   }
 
-  public get manifestProperties(): M3ULine[] {
+  public get manifestProperties(): { [key: string]: any } {
     const props: any = {};
     this.lines
       .filter(
