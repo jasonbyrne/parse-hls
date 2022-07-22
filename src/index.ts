@@ -1,5 +1,6 @@
 import { Item } from "./item";
 import { M3ULine } from "./m3u-line";
+
 const segmentTags: string[] = [
   "inf",
   "programDateTime",
@@ -53,7 +54,7 @@ export default class HLS {
     return this.isMaster ? "master" : this.isLive ? "live" : "vod";
   }
 
-  public get manifestProperties(): M3ULine[] {
+  public get manifestProperties(): { [key: string]: any } {
     const props: any = {};
     this.lines
       .filter(

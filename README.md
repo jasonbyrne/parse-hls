@@ -154,7 +154,7 @@ Example media playlist (chunklist) output:
 ```json
 {
   "type": "vod",
-  "media": [
+  "segments": [
     {
       "uri": "5fc9029e498ea93ecf7fa43f-1-ABR5_0.ts",
       "inf": {
