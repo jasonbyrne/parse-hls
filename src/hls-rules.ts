@@ -5,7 +5,6 @@ import { Define } from "./models/define";
 import { EmptyTag } from "./models/empty-tag";
 import { IFrameStreamInf } from "./models/i-frame-stream-inf";
 import { ImageStreamInf } from "./models/image-stream-inf";
-import { Inf } from "./models/inf";
 import { Key } from "./models/key";
 import { Map } from "./models/map";
 import { Media } from "./models/media";
@@ -19,7 +18,6 @@ import { SessionData } from "./models/session-data";
 import { SessionKey } from "./models/session-key";
 import { Skip } from "./models/skip";
 import { Start } from "./models/start";
-import { StreamInf } from "./models/stream-inf";
 import { StringTag } from "./models/string-tag";
 import { Tiles } from "./models/tiles";
 import { TagConstructor } from "./types";
@@ -30,7 +28,7 @@ import { TagConstructor } from "./types";
 export const SegmentTags: {
   [tagName: string]: TagConstructor<unknown>;
 } = {
-  inf: Inf,
+  inf: StringTag,
   programDateTime: StringTag,
   key: Key,
   cueIn: StringTag,
@@ -53,7 +51,7 @@ export const SegmentTags: {
  */
 export const VariantTags: {
   [tagName: string]: TagConstructor<unknown>;
-} = { streamInf: StreamInf };
+} = { streamInf: StringTag };
 
 /**
  * Possible tag lines associated with alternate renditions (camel-cased)

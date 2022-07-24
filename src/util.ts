@@ -1,6 +1,10 @@
 import { RenditionTags, SegmentTags, VariantTags } from "./hls-rules";
 import { M3ULine } from "./m3u-line";
+import { EmptyTag } from "./models/empty-tag";
+import { NumericTag } from "./models/numeric-tag";
 import { Segment } from "./models/segment";
+import { Variant } from "./models/variant";
+import { TagConstructor, UriConstructor } from "./types";
 
 export const toTagFriendlyName = (tag: string): string => {
   if (tag.startsWith("EXT")) {
@@ -76,3 +80,60 @@ export const calculateTotalDurationOfSegments = (segments: Segment[]) =>
     })();
     return sum + duration;
   }, 0);
+
+export const exists = (lines: M3ULine[], key: string): boolean => {
+  return !!find(lines, key, EmptyTag, false);
+};
+
+export const findNumber = <TDefault>(
+  lines: M3ULine[],
+  key: string,
+  defaultValue: TDefault
+) => {
+  return find(lines, key, NumericTag, undefined)?.value || defaultValue;
+};
+
+export const find = <T, TDefault>(
+  lines: M3ULine[],
+  tagName: string,
+  className: TagConstructor<T>,
+  defaultValue: TDefault
+): T | TDefault => {
+  const line = lines.find((line) => line.tagName == tagName);
+  if (!line) return defaultValue;
+  return new className(line);
+};
+
+export const collect = <T>(
+  lines: M3ULine[],
+  filter: string | ((line: M3ULine) => boolean),
+  className: TagConstructor<T>
+): T[] => {
+  const matches =
+    typeof filter == "string"
+      ? lines.filter((line) => line.tagName == filter)
+      : lines.filter(filter);
+  return matches.map((line) => new className(line));
+};
+
+export const accumulate = <T extends Segment | Variant>(
+  lines: M3ULine[],
+  until: (line: M3ULine) => boolean,
+  filter: (line: M3ULine) => boolean,
+  className: UriConstructor<T>
+): T[] => {
+  let matches: M3ULine[] = [];
+  return lines.reduce((list: T[], line: M3ULine) => {
+    // If this is a URI line, this is the final one for this item
+    if (until(line)) {
+      list.push(new className(line.getUri() || "", matches));
+      // Reset
+      matches = [];
+    }
+    // Accumulate the tags
+    else if (filter(line)) {
+      matches.push(line);
+    }
+    return list;
+  }, [] as T[]);
+};

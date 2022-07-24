@@ -14,3 +14,4 @@ export const TAG_PAIR_SPLITTER = /([^,="]+)((="[^"]+")|(=[^,]+))*/g;
 export type ManifestType = "master" | "live" | "vod";
 
 export type TagConstructor<T> = new (line: M3ULine) => T;
+export type UriConstructor<T> = new (uri: string, lines: M3ULine[]) => T;
