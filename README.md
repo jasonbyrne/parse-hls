@@ -3,7 +3,7 @@
 Strongly-typed HLS manifest parser, written in TypeScript. Fast. Zero dependencies.
 
 ```
-const manifest = HLS.parse(
+const manifest = HLS(
   fs.readFileSync("./examples/cnn-chunklist-vod.m3u8", "utf8")
 );
 

@@ -1,37 +1,19 @@
-import { knownKeys } from "./known-keys";
-import {
-  AttributePair,
-  Attributes,
-  AttributeValue,
-  TAG_PAIR_SPLITTER,
-} from "./types";
+import { AttributePair, Attributes, TAG_PAIR_SPLITTER } from "./types";
 import { coerce, toCamelCase } from "./util";
 
 const parseAttributePair = (str: string, tag: string): AttributePair => {
   const pairs = str.trim().replace("=", "|").split("|");
   // Key-Value pair
   if (pairs.length == 2) {
-    let key = toCamelCase(pairs[0]);
-    let value: AttributeValue = pairs[1].replace(/("|')/g, "");
-    if (knownKeys.hasOwnProperty(key)) {
-      value = coerce[knownKeys[key]](value);
-    }
     return {
-      key: key,
-      value: value,
+      key: toCamelCase(pairs[0]),
+      value: pairs[1].replace(/("|')/g, ""),
     };
   }
   // Standalone value
-  const value = (() => {
-    // If it's a known key then we know how to map it
-    if (knownKeys.hasOwnProperty(tag)) {
-      return coerce[knownKeys[tag]](pairs[0]);
-    }
-    return Number.isNaN(pairs[0]) ? pairs[0] : parseFloat(pairs[0]);
-  })();
   return {
     key: "value",
-    value,
+    value: pairs[0],
   };
 };
 
